@@ -21,10 +21,10 @@ class AboutScreen extends StatelessWidget {
                 color: SamkiTheme.accentLight,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'SAMKI',
                     style: TextStyle(
                       fontSize: 40,
@@ -33,8 +33,8 @@ class AboutScreen extends StatelessWidget {
                       color: SamkiTheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Digital Market',
                     style: TextStyle(
                       fontSize: 16,
@@ -42,8 +42,8 @@ class AboutScreen extends StatelessWidget {
                       letterSpacing: 2,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'Cambodia\'s trusted skincare marketplace connecting buyers with verified sellers.',
                     style: TextStyle(
                       fontSize: 15,
@@ -57,12 +57,12 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 28),
 
             // Stats
-            Row(
+            const Row(
               children: [
                 _Stat(value: '30+', label: 'Products'),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 _Stat(value: '3+', label: 'Verified Sellers'),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 _Stat(value: '6', label: 'Categories'),
               ],
             ),

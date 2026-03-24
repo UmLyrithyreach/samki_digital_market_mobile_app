@@ -102,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
                           return LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
+                            colors: const [
                               SamkiTheme.primary,
                               SamkiTheme.accent,
                               SamkiTheme.primary,
@@ -131,7 +131,7 @@ class _SplashScreenState extends State<SplashScreen>
                   // Tagline
                   FadeTransition(
                     opacity: _fadeAnim,
-                    child: Text(
+                    child: const Text(
                       'Digital Market',
                       style: TextStyle(
                         fontSize: 14,

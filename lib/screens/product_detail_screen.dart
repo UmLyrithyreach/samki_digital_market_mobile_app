@@ -93,12 +93,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
 
     if (_product == null) {
-      return Scaffold(
-        appBar: const PreferredSize(
+      return const Scaffold(
+        appBar: PreferredSize(
           preferredSize: Size.fromHeight(kToolbarHeight),
           child: SamkiAppBar(showBack: true),
         ),
-        body: const Center(child: Text('Product not found')),
+        body: Center(child: Text('Product not found')),
       );
     }
 

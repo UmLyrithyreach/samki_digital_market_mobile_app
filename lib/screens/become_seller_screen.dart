@@ -211,7 +211,7 @@ class _BecomeSellerScreenState extends State<BecomeSellerScreen> {
                               ],
                             ),
                           ))
-                      .toList(),
+                      ,
                 ],
               ),
       ),

@@ -165,7 +165,7 @@ class _HeroBanner extends ConsumerWidget {
             Positioned(
               left: 24,
               bottom: 48,
-              right: 120,
+              right: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -189,20 +189,31 @@ class _HeroBanner extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      _HeroButton(
-                        label: 'Shop Now',
-                        filled: true,
-                        onTap: () => context.go('/products'),
-                      ),
-                      const SizedBox(width: 10),
-                      _HeroButton(
-                        label: 'Sell with Us',
-                        filled: false,
-                        onTap: () => context.go('/become-seller'),
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final buttonWidth = MediaQuery.of(context).size.width * 0.3;
+                      return Row(
+                        children: [
+                          SizedBox(
+                            width: buttonWidth,
+                            child: _HeroButton(
+                              label: 'Shop Now',
+                              filled: false,
+                              onTap: () => context.go('/products'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            width: buttonWidth,
+                            child: _HeroButton(
+                              label: 'Sell with Us',
+                              filled: true,
+                              onTap: () => context.go('/become-seller'),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -230,18 +241,21 @@ class _HeroButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: filled ? Colors.white : Colors.transparent,
           border: Border.all(color: Colors.white, width: 1.5),
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: filled ? SamkiTheme.primary : Colors.white,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: filled ? SamkiTheme.primary : Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),

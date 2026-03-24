@@ -17,14 +17,14 @@ class CartScreen extends ConsumerWidget {
     return Scaffold(
       appBar: const SamkiAppBar(title: 'Cart', showBack: true),
       body: cartItems.isEmpty
-          ? Center(
+          ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.shopping_bag_outlined,
+                  Icon(Icons.shopping_bag_outlined,
                       size: 64, color: SamkiTheme.border),
-                  const SizedBox(height: 16),
-                  const Text(
+                  SizedBox(height: 16),
+                  Text(
                     'Your cart is empty',
                     style: TextStyle(
                       fontSize: 18,
@@ -32,8 +32,8 @@ class CartScreen extends ConsumerWidget {
                       color: SamkiTheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  SizedBox(height: 8),
+                  Text(
                     'Add some products to get started',
                     style: TextStyle(color: SamkiTheme.secondary),
                   ),

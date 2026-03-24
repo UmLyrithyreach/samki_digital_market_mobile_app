@@ -174,7 +174,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
               Expanded(
                 flex: 2,
                 child: Padding(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -187,6 +187,8 @@ class _ProductCardState extends ConsumerState<ProductCard>
                           color: SamkiTheme.accent,
                           letterSpacing: 1,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 3),
                       // Name
@@ -215,16 +217,21 @@ class _ProductCardState extends ConsumerState<ProductCard>
                       const Spacer(),
                       // Price + Add to cart
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            currency.format(product.price),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: SamkiTheme.primary,
+                          Expanded(
+                            child: Text(
+                              currency.format(product.price),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: SamkiTheme.primary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 6),
                           if (product.inStock)
                             GestureDetector(
                               onTap: _addToCart,

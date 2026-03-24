@@ -59,171 +59,174 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
 
     return Scaffold(
       appBar: const SamkiAppBar(showBack: true),
-      body: Column(
-        children: [
-          // ── Header ───────────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            color: SamkiTheme.surface,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Shop All Products',
-                    style: Theme.of(context).textTheme.displaySmall),
-                const SizedBox(height: 4),
-                const Text('Premium skincare from trusted sellers',
-                    style:
-                        TextStyle(fontSize: 13, color: SamkiTheme.secondary)),
-                const SizedBox(height: 16),
-                // Category chips
-                SizedBox(
-                  height: 36,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final cat = _categories[index];
-                      final isSelected = cat == selectedCategory ||
-                          (cat == 'all' && selectedCategory == 'all');
-                      return GestureDetector(
-                        onTap: () {
-                          ref.read(selectedCategoryProvider.notifier).state =
-                              cat;
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? SamkiTheme.primary
-                                : SamkiTheme.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
+      body: CustomScrollView(
+        slivers: [
+          // ── Header with Categories ────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              color: SamkiTheme.surface,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Shop All Products',
+                      style: Theme.of(context).textTheme.displaySmall),
+                  const SizedBox(height: 4),
+                  const Text('Premium skincare from trusted sellers',
+                      style:
+                          TextStyle(fontSize: 13, color: SamkiTheme.secondary)),
+                  const SizedBox(height: 16),
+                  // Category chips
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, index) {
+                        final cat = _categories[index];
+                        final isSelected = cat == selectedCategory ||
+                            (cat == 'all' && selectedCategory == 'all');
+                        return GestureDetector(
+                          onTap: () {
+                            ref.read(selectedCategoryProvider.notifier).state =
+                                cat;
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
                               color: isSelected
                                   ? SamkiTheme.primary
-                                  : SamkiTheme.border,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              cat == 'all' ? 'All' : cat,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                                  : SamkiTheme.surface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
                                 color: isSelected
-                                    ? Colors.white
-                                    : SamkiTheme.primary,
+                                    ? SamkiTheme.primary
+                                    : SamkiTheme.border,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                cat == 'all' ? 'All' : cat,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : SamkiTheme.primary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Sticky Search Bar ────────────────────────────────────────────
-          Container(
-            color: const Color(0xFFF8F7F5),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (val) =>
-                  ref.read(searchQueryProvider.notifier).state = val,
-              decoration: const InputDecoration(
-                hintText: 'Search products...',
-                prefixIcon:
-                    Icon(Icons.search, size: 18, color: SamkiTheme.secondary),
-                isDense: true,
-              ),
-            ),
-          ),
-
-          // ── Filter bar ───────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: const BoxDecoration(
-              color: SamkiTheme.surface,
-              border: Border(
-                top: BorderSide(color: SamkiTheme.border),
-                bottom: BorderSide(color: SamkiTheme.border),
-              ),
-            ),
-            child: Row(
-              children: [
-                filteredAsync.when(
-                  data: (p) => Text(
-                    '${p.length} products found',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: SamkiTheme.secondary,
-                      fontWeight: FontWeight.w500,
+                        );
+                      },
                     ),
                   ),
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () =>
-                      setState(() => _filtersVisible = !_filtersVisible),
+                ],
+              ),
+            ),
+          ),
+
+          // ── Sticky Search Bar (pinned) ────────────────────────────────────
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _SearchBarDelegate(
+              searchController: _searchController,
+              onSearchChanged: (val) =>
+                  ref.read(searchQueryProvider.notifier).state = val,
+            ),
+          ),
+
+          // ── Filter bar + Collapsible Filters ──────────────────────────────
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: const BoxDecoration(
+                    color: SamkiTheme.surface,
+                    border: Border(
+                      top: BorderSide(color: SamkiTheme.border),
+                      bottom: BorderSide(color: SamkiTheme.border),
+                    ),
+                  ),
                   child: Row(
                     children: [
-                      Icon(
-                        _filtersVisible ? Icons.tune : Icons.tune,
-                        size: 16,
-                        color: SamkiTheme.primary,
+                      filteredAsync.when(
+                        data: (p) => Text(
+                          '${p.length} products found',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: SamkiTheme.secondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _filtersVisible ? 'Hide Filters' : 'Show Filters',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: SamkiTheme.primary,
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () =>
+                            setState(() => _filtersVisible = !_filtersVisible),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _filtersVisible ? Icons.tune : Icons.tune,
+                              size: 16,
+                              color: SamkiTheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _filtersVisible ? 'Hide Filters' : 'Show Filters',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: SamkiTheme.primary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  child: _filtersVisible
+                      ? _FilterOptionsPanel(
+                          inStockOnly: inStockOnly,
+                          sortBy: sortBy,
+                          sortOptions: _sortOptions,
+                          onInStockChanged: (val) => ref
+                              .read(inStockOnlyProvider.notifier)
+                              .state = val,
+                          onSortChanged: (val) => ref
+                              .read(sortByProvider.notifier)
+                              .state = val ?? 'featured',
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ),
 
-          // ── Collapsible Filters Panel ──────────────────────────────────────
-          AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            child: _filtersVisible
-                ? _FilterOptionsPanel(
-                    inStockOnly: inStockOnly,
-                    sortBy: sortBy,
-                    sortOptions: _sortOptions,
-                    onInStockChanged: (val) =>
-                        ref.read(inStockOnlyProvider.notifier).state = val,
-                    onSortChanged: (val) => ref
-                        .read(sortByProvider.notifier)
-                        .state = val ?? 'featured',
-                  )
-                : const SizedBox.shrink(),
-          ),
-
-          // ── Products Grid ─────────────────────────────────────────────────
-          Expanded(
-            child: filteredAsync.when(
-              data: (products) => products.isEmpty
-                  ? const Center(
+          // ── Products Grid (SliverGrid) ─────────────────────────────────────
+          filteredAsync.when(
+            data: (products) => products.isEmpty
+                ? const SliverFillRemaining(
+                    child: Center(
                       child: Text(
                         'No products found',
                         style: TextStyle(color: SamkiTheme.secondary),
                       ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(16),
+                    ),
+                  )
+                : SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverGrid(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -231,14 +234,20 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
-                      itemCount: products.length,
-                      itemBuilder: (context, index) =>
-                          ProductCard(product: products[index]),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) =>
+                            ProductCard(product: products[index]),
+                        childCount: products.length,
+                      ),
                     ),
-              loading: () => const Center(
+                  ),
+            loading: () => const SliverFillRemaining(
+              child: Center(
                 child: CircularProgressIndicator(strokeWidth: 1.5),
               ),
-              error: (err, _) => Center(child: Text('Error: $err')),
+            ),
+            error: (err, _) => SliverFillRemaining(
+              child: Center(child: Text('Error: $err')),
             ),
           ),
         ],
@@ -307,5 +316,47 @@ class _FilterOptionsPanel extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchChanged;
+
+  _SearchBarDelegate({
+    required this.searchController,
+    required this.onSearchChanged,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: const Color(0xFFF8F7F5),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      child: TextField(
+        controller: searchController,
+        onChanged: onSearchChanged,
+        decoration: const InputDecoration(
+          hintText: 'Search products...',
+          prefixIcon: Icon(Icons.search, size: 18, color: SamkiTheme.secondary),
+          isDense: true,
+        ),
+      ),
+    );
+  }
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  bool shouldRebuild(_SearchBarDelegate oldDelegate) {
+    return searchController != oldDelegate.searchController;
   }
 }
