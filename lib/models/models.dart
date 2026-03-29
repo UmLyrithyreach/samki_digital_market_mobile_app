@@ -37,7 +37,9 @@ class Product {
         }
       }
     }
-    if (images.isEmpty && json['image'] != null && json['image']['asset'] != null) {
+    if (images.isEmpty &&
+        json['image'] != null &&
+        json['image']['asset'] != null) {
       final asset = json['image']['asset'];
       if (asset['url'] != null) images.add(asset['url']);
     }
@@ -99,16 +101,46 @@ class CartItem {
 // Order model
 class Order {
   final String id;
+  final String userId;
+  final String orderNumber;
   final List<CartItem> items;
   final double total;
   final DateTime createdAt;
   final String status;
+  final ShippingAddress address;
+  final String? paymentReference;
+  final String? paymentProofImageUrl;
+  final DateTime? paymentSubmittedAt;
 
   Order({
     required this.id,
+    required this.userId,
+    required this.orderNumber,
     required this.items,
     required this.total,
     required this.createdAt,
     required this.status,
+    required this.address,
+    this.paymentReference,
+    this.paymentProofImageUrl,
+    this.paymentSubmittedAt,
+  });
+}
+
+class ShippingAddress {
+  final String name;
+  final String line1;
+  final String line2;
+  final String city;
+  final String postcode;
+  final String country;
+
+  const ShippingAddress({
+    required this.name,
+    required this.line1,
+    this.line2 = '',
+    required this.city,
+    this.postcode = '',
+    this.country = 'Cambodia',
   });
 }

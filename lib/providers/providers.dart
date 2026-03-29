@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/models.dart';
 import '../services/sanity_service.dart';
 
@@ -151,6 +153,249 @@ final cartCountProvider = Provider<int>((ref) {
 final cartTotalProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   return cart.fold(0.0, (sum, item) => sum + item.subtotal);
+});
+
+// ── Auth (Clerk-style local session for mobile app) ─────────────────────────
+class AuthUser {
+  final String id;
+  final String fullName;
+  final String email;
+
+  const AuthUser({
+    required this.id,
+    required this.fullName,
+    required this.email,
+  });
+}
+
+class AuthState {
+  final AuthUser? user;
+  final List<StoredAuthUser> registeredUsers;
+
+  const AuthState({
+    required this.user,
+    required this.registeredUsers,
+  });
+
+  bool get isSignedIn => user != null;
+}
+
+class StoredAuthUser {
+  final AuthUser user;
+  final String password;
+
+  const StoredAuthUser({
+    required this.user,
+    required this.password,
+  });
+}
+
+class AuthNotifier extends StateNotifier<AuthState> {
+  AuthNotifier() : super(const AuthState(user: null, registeredUsers: []));
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  String? register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail.isEmpty ||
+        password.isEmpty ||
+        fullName.trim().isEmpty) {
+      return 'Please fill in all required fields.';
+    }
+
+    final exists = state.registeredUsers.any(
+      (u) => u.user.email.toLowerCase() == normalizedEmail,
+    );
+    if (exists) {
+      return 'An account with this email already exists.';
+    }
+
+    final newUser = AuthUser(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+    );
+
+    state = AuthState(
+      user: newUser,
+      registeredUsers: [
+        ...state.registeredUsers,
+        StoredAuthUser(user: newUser, password: password),
+      ],
+    );
+    return null;
+  }
+
+  String? signIn({
+    required String email,
+    required String password,
+  }) {
+    final normalizedEmail = email.trim().toLowerCase();
+    final match = state.registeredUsers.where((u) {
+      return u.user.email.toLowerCase() == normalizedEmail &&
+          u.password == password;
+    });
+
+    if (match.isEmpty) {
+      return 'Invalid email or password.';
+    }
+
+    state = AuthState(
+      user: match.first.user,
+      registeredUsers: state.registeredUsers,
+    );
+    return null;
+  }
+
+  void signOut() {
+    _googleSignIn.signOut();
+    state = AuthState(user: null, registeredUsers: state.registeredUsers);
+  }
+
+  Future<String?> signInWithGoogle() async {
+    try {
+      final isMobile = defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS;
+      if (!isMobile) return 'GOOGLE_UNSUPPORTED_PLATFORM';
+
+      final account = await _googleSignIn.signIn();
+      if (account == null) return 'GOOGLE_CANCELLED';
+
+      final email = account.email.trim().toLowerCase();
+      final existing = state.registeredUsers.where(
+        (u) => u.user.email.toLowerCase() == email,
+      );
+
+      AuthUser user;
+      if (existing.isNotEmpty) {
+        user = existing.first.user;
+      } else {
+        user = AuthUser(
+          id: account.id,
+          fullName: (account.displayName ?? 'Google User').trim(),
+          email: email,
+        );
+      }
+
+      final isStored = state.registeredUsers.any(
+        (u) => u.user.email.toLowerCase() == email,
+      );
+
+      state = AuthState(
+        user: user,
+        registeredUsers: isStored
+            ? state.registeredUsers
+            : [...state.registeredUsers, StoredAuthUser(user: user, password: '')],
+      );
+      return null;
+    } catch (e) {
+      return 'GOOGLE_FAILED::$e';
+    }
+  }
+}
+
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
+  (ref) => AuthNotifier(),
+);
+
+final currentUserProvider = Provider<AuthUser?>((ref) {
+  return ref.watch(authProvider).user;
+});
+
+// ── Orders ───────────────────────────────────────────────────────────────────
+class OrdersNotifier extends StateNotifier<List<Order>> {
+  OrdersNotifier() : super([]);
+
+  Order placeOrder({
+    required String userId,
+    required List<CartItem> items,
+    required ShippingAddress address,
+  }) {
+    final timestamp = DateTime.now();
+    final id = timestamp.microsecondsSinceEpoch.toString();
+    final order = Order(
+      id: id,
+      userId: userId,
+      orderNumber: '#${timestamp.millisecondsSinceEpoch % 1000000}',
+      items: items
+          .map((item) =>
+              CartItem(product: item.product, quantity: item.quantity))
+          .toList(),
+      total: items.fold(0.0, (sum, item) => sum + item.subtotal),
+      createdAt: timestamp,
+      status: 'pending_payment',
+      address: address,
+      paymentReference: 'SAMKI-$id',
+      paymentProofImageUrl: null,
+      paymentSubmittedAt: null,
+    );
+
+    state = [order, ...state];
+    return order;
+  }
+
+  void updateStatus(String orderId, String status) {
+    state = [
+      for (final order in state)
+        if (order.id == orderId)
+          Order(
+            id: order.id,
+            userId: order.userId,
+            orderNumber: order.orderNumber,
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt,
+            status: status,
+            address: order.address,
+            paymentReference: order.paymentReference,
+            paymentProofImageUrl: order.paymentProofImageUrl,
+            paymentSubmittedAt: order.paymentSubmittedAt,
+          )
+        else
+          order,
+    ];
+  }
+
+  void submitPaymentProof({
+    required String orderId,
+    required String paymentReference,
+    required String paymentProofImageUrl,
+  }) {
+    state = [
+      for (final order in state)
+        if (order.id == orderId)
+          Order(
+            id: order.id,
+            userId: order.userId,
+            orderNumber: order.orderNumber,
+            items: order.items,
+            total: order.total,
+            createdAt: order.createdAt,
+            status: 'payment_submitted',
+            address: order.address,
+            paymentReference: paymentReference,
+            paymentProofImageUrl: paymentProofImageUrl,
+            paymentSubmittedAt: DateTime.now(),
+          )
+        else
+          order,
+    ];
+  }
+}
+
+final ordersProvider = StateNotifierProvider<OrdersNotifier, List<Order>>(
+  (ref) => OrdersNotifier(),
+);
+
+final orderByIdProvider = Provider.family<Order?, String>((ref, orderId) {
+  final orders = ref.watch(ordersProvider);
+  for (final order in orders) {
+    if (order.id == orderId) return order;
+  }
+  return null;
 });
 
 // ── Range values (needed for price range slider) ──────────────────────────────

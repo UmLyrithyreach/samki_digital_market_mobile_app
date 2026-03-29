@@ -51,6 +51,18 @@ flutter pub get
 flutter run
 ```
 
+### 2.1 Use external env keys (recommended)
+Do not hardcode keys in source. Run using your local env file:
+```bash
+flutter run --dart-define-from-file=.env.local
+```
+The app reads:
+- `NEXT_PUBLIC_SANITY_PROJECT_ID`
+- `NEXT_PUBLIC_SANITY_DATASET`
+- `NEXT_PUBLIC_SANITY_ORG_ID`
+- `NEXT_PUBLIC_SANITY_API_WRITE_TOKEN`
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+
 ### 3. (Optional) Connect to your Sanity backend
 The app uses Sanity project ID `brfi2cco` by default (extracted from the live site).
 To use your own project, edit `lib/services/sanity_service.dart`:

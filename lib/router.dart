@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../screens/splash_screen.dart';
-import '../screens/home_screen.dart';
-import '../screens/products_screen.dart';
-import '../screens/product_detail_screen.dart';
-import '../screens/cart_screen.dart';
-import '../screens/orders_screen.dart';
-import '../screens/become_seller_screen.dart';
-import '../screens/about_screen.dart';
+import 'screens/about_screen.dart';
+import 'screens/auth_screen.dart';
+import 'screens/bakong_payment_screen.dart';
+import 'screens/become_seller_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/checkout_screen.dart';
+import 'screens/checkout_success_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/order_detail_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/product_detail_screen.dart';
+import 'screens/products_screen.dart';
+import 'screens/splash_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -19,6 +24,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/auth',
+      builder: (context, state) => const AuthScreen(),
     ),
     GoRoute(
       path: '/products',
@@ -58,8 +67,33 @@ final appRouter = GoRouter(
       builder: (context, state) => const CartScreen(),
     ),
     GoRoute(
+      path: '/checkout',
+      builder: (context, state) => const CheckoutScreen(),
+    ),
+    GoRoute(
+      path: '/checkout/success/:orderId',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId'] ?? '';
+        return CheckoutSuccessScreen(orderId: orderId);
+      },
+    ),
+    GoRoute(
+      path: '/checkout/payment/:orderId',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId'] ?? '';
+        return BakongPaymentScreen(orderId: orderId);
+      },
+    ),
+    GoRoute(
       path: '/orders',
       builder: (context, state) => const OrdersScreen(),
+    ),
+    GoRoute(
+      path: '/orders/:orderId',
+      builder: (context, state) {
+        final orderId = state.pathParameters['orderId'] ?? '';
+        return OrderDetailScreen(orderId: orderId);
+      },
     ),
     GoRoute(
       path: '/become-seller',

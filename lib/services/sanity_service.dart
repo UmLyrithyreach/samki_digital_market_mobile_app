@@ -1,21 +1,39 @@
 import 'dart:developer' as developer;
 
 import 'package:dio/dio.dart';
+import '../config/app_env.dart';
 import '../models/models.dart';
 
 class SanityService {
-  static const String _projectId = 'brfi2cco';
-  static const String _dataset = 'production';
   static const String _apiVersion = 'v2023-05-03';
+  final String _projectId;
+  final String _dataset;
 
-  final Dio _dio = Dio(BaseOptions(
-    baseUrl:
-        'https://$_projectId.api.sanity.io/$_apiVersion/data/query/$_dataset',
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
+  late final Dio _dio;
+
+  SanityService()
+      : _projectId = AppEnv.sanityProjectId.trim(),
+        _dataset = AppEnv.sanityDataset.trim() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: AppEnv.hasSanityConfig
+            ? 'https://$_projectId.api.sanity.io/$_apiVersion/data/query/$_dataset'
+            : 'https://invalid.local',
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ),
+    );
+  }
 
   Future<List<Product>> fetchProducts({String? category}) async {
+    if (!AppEnv.hasSanityConfig) {
+      developer.log(
+        'Missing Sanity env config. Using mock products.',
+        name: 'SanityService.fetchProducts',
+      );
+      return _getMockProducts(category: category);
+    }
+
     String categoryFilter = category != null && category != 'all'
         ? '&& category->slug.current == "$category"'
         : '';
@@ -66,6 +84,14 @@ class SanityService {
   }
 
   Future<List<ProductCategory>> fetchCategories() async {
+    if (!AppEnv.hasSanityConfig) {
+      developer.log(
+        'Missing Sanity env config. Using mock categories.',
+        name: 'SanityService.fetchCategories',
+      );
+      return _getMockCategories();
+    }
+
     const query = '''
       *[_type == "category"] | order(name asc) {
         _id,
@@ -97,6 +123,11 @@ class SanityService {
   }
 
   Future<Product?> fetchProductBySlug(String slug) async {
+    if (!AppEnv.hasSanityConfig) {
+      final local = _getMockProducts().where((p) => p.slug == slug);
+      return local.isEmpty ? null : local.first;
+    }
+
     final query = '''
       *[_type == "product" && slug.current == "$slug"][0] {
         _id,
